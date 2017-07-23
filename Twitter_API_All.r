@@ -1,7 +1,12 @@
+#Getting tweets from twitter
 library(twitteR)
+#Twitter-R Authentication
 library(ROAuth)
+#Text processing
 library(stringr)
+#Text mining
 library(tm)
+#Wordcloud creation
 library(wordcloud)
 
 #Connect to twitter API Method 1 
@@ -32,7 +37,7 @@ usernames <- as.list(usernames$screenName)
 
 x <- userTimeline('SrBachchan',n=3200,includeRts = TRUE)
 
-#Convert tweets to dataframe
+#Convert tweets to dataframe for easy reading
 AmitabhData <- twListToDF(x)
 
 #Wait 5 minutes  
@@ -56,7 +61,7 @@ Andrew.df <- data.frame(Y[2])
 Kohli.df <- data.frame(Y[1])
 Sundar.df <- data.frame(SundarPichaiData)
 
-#Now create a dataframe that combines all of the collected tweets
+#Now create a dataframe that combines all of the collected tweets for cleaning the text all at once 
 tweets <- data.frame()
 
 tweets <- Amitabh.df
@@ -64,20 +69,28 @@ tweets <- rbind(tweets,Andrew.df)
 tweets <- rbind(tweets,Kohli.df)
 tweets <- rbind(tweets,Sundar.df)
 
-#Process these togeether using text mining package and create wordcould for each 
-iconv(tweets$text, from="UTF-8", to="ASCII", sub="")
-tweets$text=str_replace_all(tweets$text,"[^[:graph:]]", " ")
-
-tweets$text <- gsub("[^[:alnum:]///' ]", "", tweets$text)
-tweets$text <- tolower(tweets$text)
-tweets$text <- gsub("rt", "", tweets$text)
-tweets$text <- gsub("[[:punct:]]", "", tweets$text)
-tweets$text <- gsub("http\\w+", "", tweets$text)
-tweets$text <- gsub("[ |\t]{2,}", "", tweets$text)
-tweets$text <- gsub("^ ", "", tweets$text)
-tweets$text <- gsub(" $", "", tweets$text)
-# Can remove usernames from the tweets using the following code line but I preferred not to 
-tweets$text <- gsub("@\\w+", "", tweets$text)
+#Process these together using text mining package and create wordcould for each 
+            iconv(tweets$text, from="UTF-8", to="ASCII", sub="")
+#Clean text by removing graphic characters
+            tweets$text=str_replace_all(tweets$text,"[^[:graph:]]", " ")
+#Remove Junk Values and replacement words like fffd which appear because of encoding differences
+            tweets$text <- gsub("[^[:alnum:]///' ]", "", tweets$text)
+#Convert all text to lower case
+            tweets$text <- tolower(tweets$text)
+#Remove retweet keyword
+            tweets$text <- gsub("rt", "", tweets$text)
+#Remove Punctuations
+            tweets$text <- gsub("[[:punct:]]", "", tweets$text)
+#Remove links
+            tweets$text <- gsub("http\\w+", "", tweets$text)
+#Remove tabs
+            tweets$text <- gsub("[ |\t]{2,}", "", tweets$text)
+#Remove blankspaces at begining
+            tweets$text <- gsub("^ ", "", tweets$text)
+#Remove blankspaces at the end
+            tweets$text <- gsub(" $", "", tweets$text)
+#Can remove usernames from the tweets using the following code line but I preferred not to 
+            tweets$text <- gsub("@\\w+", "", tweets$text)
 
 #After preprocessing the data, subset for tweets for each handle
 Kohli <- subset(tweets, screenName == "imVkohli", select = text)
@@ -91,16 +104,16 @@ Kohli <- Corpus(VectorSource(Kohli))
 Andrew <- Corpus(VectorSource(Andrew))
 Sundar <- Corpus(VectorSource(Sundar))
 
-#Remove English Stopwords from the tweets
+#Remove English Stopwords (e.g. 'my', 'nodoby', 'do', 'today' etc.) from the tweets
 Amit <- tm_map(Amit, removeWords, stopwords("en"))
 Andrew <- tm_map(Andrew, removeWords, stopwords("en"))
 Kohli <- tm_map(Kohli, removeWords, stopwords("en"))
 Sundar <- tm_map(Sundar, removeWords, stopwords("en"))
 
-#Remove numbers in necessary
+#Remove numbers if necessary
 Amit <- tm_map(Amit, removeNumbers)
 
-#Create wordcloud using the 
+#Create wordcloud using the wordcloud function and adjusting the parameters as per needs
 wordcloud(Amit,min.freq = 3, scale=c(7,0.5),colors=brewer.pal(8, "Dark2"),random.color= FALSE, random.order = FALSE, max.words = 100)
 wordcloud(Sundar,min.freq = 2, scale=c(7,0.5),colors=brewer.pal(8, "Dark2"),random.color= FALSE, random.order = FALSE, max.words = 150)
 wordcloud(Andrew,min.freq = 2, scale=c(7,0.5),colors=brewer.pal(8, "Dark2"),random.color= FALSE, random.order = FALSE, max.words = 150)
