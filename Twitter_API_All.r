@@ -9,38 +9,41 @@ library(tm)
 #Wordcloud creation
 library(wordcloud)
 
-#Connect to twitter API Method 1 
-#Use the following link to get Twitter API
-load("twitter authentication.Rdata")
-setup_twitter_oauth(cred$consumerKey, cred$consumerSecret, cred$oauthKey, cred$oauthSecret)
-
-#Connect to twitter API Method 2
-#ConsumerKey <-	"LXXXXXXX"
-#ConsumerSecret <- "bfXXXXXX"
-#AccessToken <- "1XXXXXX-XXXXXXXX"
-#AccessTokenSecret <- "XXXXXXXXXXX"
-#setup_twitter_oauth(ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret)
+#Connect to twitter API using your API tokens/keys
+ConsumerKey <- "LXXXXXXX"
+ConsumerSecret <- "bfXXXXXX"
+AccessToken <- "1XXXXXX-XXXXXXXX"
+AccessTokenSecret <- "XXXXXXXXXXX"
+setup_twitter_oauth(ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret)
 
 #Search Tweets using Keyword or get all the tweets of a user
 #tweets <- searchTwitter('#DataLove', n=10, lang="en", since=NULL, until=NULL, retryOnRateLimit=10)
 
 #Get tweets of celebrities and plot wordcloud
+
+#Get twitter handles of the celebrities you wanna look up
 screenName <- c('SrBachchan', 'imVkohli', 'AndrewYNg', 'sundarpichai')
+#Check handles
 checkHandles <- lookupUsers(screenName)
+#Get user data 
 UserData <- lapply(checkHandles, function(x) getUser(x))
+#Convert to data frame for easy access
 UserData <- twListToDF(UserData)
 table(UserData$name, UserData$statusesCount) #Check Status Count
 table(UserData$name, UserData$protected)   #Check Private Accounts
 
+#Subset for public accounts
 usernames <- subset(UserData, protected == FALSE)
 usernames <- as.list(usernames$screenName)
 
+#Get max 3200 tweets using the userTimeline function, Twitter only allows access to a users most recent 3240 tweets
+#Include retweets, default is not to
 x <- userTimeline('SrBachchan',n=3200,includeRts = TRUE)
 
 #Convert tweets to dataframe for easy reading
 AmitabhData <- twListToDF(x)
 
-#Wait 5 minutes  
+#Wait 5 minutes because of the API rate limits
 Sys.sleep(300)
 
 x <- lapply(usernames[c(2:3)], function(x) userTimeline(x,n=3200,includeRts = TRUE))
@@ -53,7 +56,6 @@ Sys.sleep(300)
 
 x <- userTimeline('sundarpichai',n=3200,includeRts = TRUE)
 
-#Make each into a dataframe
 SundarPichaiData <- twListToDF(x)
 
 Amitabh.df <- data.frame(AmitabhData)
